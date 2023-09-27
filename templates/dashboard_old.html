@@ -1,0 +1,1014 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <title>Lasfunding - Dashboard</title>
+  <style>
+    .main-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /*padding: 24px;*/
+  }
+  
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 24px;
+    max-width: 960px;
+    width: 100%;
+    margin-top: 200px;
+    margin-left: -80px;
+    margin-bottom: -300px;
+  }
+  
+  @media (max-width: 767px) {
+    .grid {
+      grid-template-columns: repeat(1, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+    }
+  }
+  
+  .grid-item {
+    position: relative;
+    background-color: #FFFFFF;
+    box-shadow: -4px 4px 4px rgba(0, 0, 0, 0.08), 4px 4px 4px rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+  }
+  
+  .stock-chart {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px 16px;
+    gap: 26px;
+    width: 100%;
+    height: 90%;
+  }
+  
+  .earning-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 24px 16px 16px;
+    gap: 16px;
+    isolation: isolate;
+    width: 264px;
+    height: 336px;
+  }
+  
+  .transaction-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 32px 16px;
+    gap: 22px;
+    width: 708px;
+    height: 356px;
+    top: -55px;
+  }
+  
+  .transaction-info {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 144%;
+    /* identical to box height, or 20px */
+  
+    letter-spacing: 0.001em;
+  
+    /* gray/900 */
+  
+    color: #18181B;
+  }
+  
+  .transaction-amount {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 120%;  
+    color: #040100;
+  }
+  
+  .transaction-date {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 144%;  
+    letter-spacing: 0.001em;
+    color: #8E8B8A;
+  }
+  
+  .history-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px 16px 16px;
+    gap: 16px;
+    isolation: isolate;
+    width: 264px;
+    /** height: 448px; **/
+    top: -395px;
+    height: 95%;
+
+  }
+  
+  @media (max-width: 767px) {
+    .stock-chart {
+      width: 100%;
+      height: auto;
+    }
+    .transaction-card {
+      width: 100%;
+      height: auto;
+    }
+    .history-card {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 24px 16px 16px;
+      gap: 16px;
+      isolation: isolate;
+      width: 264px;
+      height: 448px;
+    }
+  }
+        
+  
+  
+      .transaction-row{
+        display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      gap: 56px;
+  
+      width: 676px;
+      height: 71.33px;
+  
+      background: #FFFFFF;
+  
+      /* Inside auto layout */
+  
+      flex: none;
+      order: 2;
+      align-self: stretch;
+      flex-grow: 1;
+      }
+  
+      .transaction-status.pending{
+        background: #F9F6B0;
+        border-radius: 40px;
+        height: 23.77142906188965px;
+        width: 118.94461822509766px;
+        left: 0px;
+        top: 0px;
+        padding-left: 7px;
+        border-radius: 40px;
+        
+      }
+      
+      .transaction-status.completed{
+        background: #BAF5B0;
+        border-radius: 40px;
+        height: 23.77142906188965px;
+        width: 118.94461822509766px;
+        left: 0px;
+        top: 0px;
+        padding-left: 7px;
+        border-radius: 40px;
+        }
+  
+      .transaction-status.canceled{
+        background: #F7B0B0;
+        border-radius: 40px;
+        padding-left: 7px;
+        height: 23.77142906188965px;
+        width: 118.94461822509766px;
+        left: 0px;
+        top: 0px;
+        border-radius: 40px;
+  
+        }
+  
+      </style>
+  
+      <style>
+        div#dashboard-header{
+          position: absolute;
+          width: 65%;
+          height: 20%;
+          /*
+          left: 344px;
+          top: 211px; */
+  
+          background: linear-gradient(270deg, rgba(234, 132, 84, 0.23) 0%, rgba(234, 132, 84, 0.04) 100%);
+          border-radius: 16px;
+          }
+          @media (max-width: 767px) {
+            div#dashboard-header{
+              position: absolute;
+              width: 100%;
+              height: 181px;
+              /*
+              left: 344px;
+              top: 211px; */
+      
+              background: linear-gradient(270deg, rgba(234, 132, 84, 0.23) 0%, rgba(234, 132, 84, 0.04) 100%);
+              border-radius: 16px;
+              }
+            
+          }
+          
+          
+  
+          .header-title{           
+            width: 181px;
+            height: 38px;        
+            font-family: 'Poppins';
+            font-style: normal;
+            font-weight: 500;
+            font-size: 32px;
+            line-height: 120%;         
+            color: #040100;          
+            flex: none;
+            order: 0;
+            flex-grow: 0;
+  
+          }
+          .welcome-message{        
+  
+          width: 283px;
+          height: 24px;        
+          font-family: 'Poppins';
+          font-style: normal;
+          font-weight: 400;
+          font-size: 20px;
+          line-height: 120%;        
+          color: #5B5654;      
+          flex: none;
+          order: 1;
+          flex-grow: 0;
+  
+          }
+  
+  
+          .trade-item{
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 8px 12px;
+            gap: 8px;
+            width: 219px;
+            height: 84px;
+            background: #FFFFFF;
+            border-bottom: 0.5px solid #B3B1B0;
+            flex: none;
+            order: 0;
+            flex-grow: 0;
+            z-index: 0;
+            }
+  
+            .trade-details{
+              display: flex;
+              flex-direction: row;
+              justify-content: space-between;
+              align-items: center;
+              padding: 0px;
+              gap: 94px;
+              width: 195px;
+              height: 20px;
+              flex: none;
+              order: 0;
+              align-self: stretch;
+              flex-grow: 0;
+            }
+  
+  
+            .trade-type{            
+              width: 71px;
+              height: 19px;
+              font-family: 'Poppins';
+              font-style: normal;
+              font-weight: 500;
+              font-size: 16px;
+              line-height: 120%;            
+              letter-spacing: 0.02em;           
+              color: #040100;
+              flex: none;
+              order: 0;
+              flex-grow: 0;
+            }
+  
+            .trade-amount{            
+              width: 63px;
+              height: 20px;            
+              font-family: 'Poppins';
+              font-style: normal;
+              font-weight: 500;
+              font-size: 14px;
+              line-height: 144%;            
+              letter-spacing: 0.001em;
+              color: #1FE000;
+              flex: none;
+              order: 1;
+              flex-grow: 0;
+            }
+  
+            .trade-description{ 
+              width: 195px;
+              height: 40px;            
+              font-family: 'Poppins';
+              font-style: normal;
+              font-weight: 400;
+              font-size: 14px;
+              line-height: 144%;            
+              color: #5B5654;
+              flex: none;
+              order: 1;
+              align-self: stretch;
+              flex-grow: 0;
+            }
+  
+  
+            .History-card-header{
+              display: flex;
+              flex-direction: row;
+              justify-content: space-between;
+              align-items: center;
+              padding: 0px 8px 0px 16px;
+              gap: 8px;
+              width: 232px;
+              height: 36px;
+              flex: none;
+              order: 0;
+              align-self: stretch;
+              flex-grow: 0;
+              z-index: 0;
+              
+            }
+            .History-card-title{
+              width: 67px;
+              height: 22px;
+              font-family: 'Poppins';
+              font-style: normal;
+              font-weight: 700;
+              font-size: 18px;
+              line-height: 120%;
+              display: flex;
+              align-items: center;
+              color: #040100;
+              flex: none;
+              order: 0;
+              flex-grow: 0;
+  
+            }
+  
+            .History-card-date{
+              width: 37px;
+              height: 12px;
+              font-family: 'Poppins';
+              font-style: normal;
+              font-weight: 500;
+              font-size: 10px;
+              line-height: 120%;
+              color: #8E8B8A;
+              flex: none;
+              order: 1;
+              flex-grow: 0;
+            }
+  
+            .card-header{
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0px 8px 0px 16px;
+            gap: 8px;
+            width: 232px;
+            height: 36px;
+            flex: none;
+            order: 0;
+            align-self: stretch;
+            flex-grow: 0;
+            z-index: 0;
+                  }
+  
+  
+          div#stock-chart-1{
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          align-items: center;
+          padding: 18px 16px;
+          gap: 24px;
+  
+  
+          flex: none;
+          order: 0;
+          align-self: stretch;
+          flex-grow: 0;
+          z-index: 0;
+        }
+  
+        .chart-header {
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0px 16px;
+          gap: 24px;
+          width: 675px;
+          height: 56px;
+          flex: none;
+          order: 0;
+          align-self: stretch;
+          flex-grow: 0;
+          z-index: 0;
+        }
+        .chart-header-left {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          padding: 0px;
+          gap: 12px;
+          width: 254px;
+          height: 56px;
+          flex: none;
+          order: 0;
+          flex-grow: 0;
+      }
+  
+      </style>
+  
+  
+      <style>
+        .earning-info {
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0px 8px 0px 16px;
+          gap: 8px;
+          width: 232px;
+          height: 36px;
+          flex: none;
+          order: 0;
+          align-self: stretch;
+          flex-grow: 0;
+          z-index: 0;
+        }
+  
+        .earning-title{
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          padding: 0px;
+          gap: 8px;
+          width: 82px;
+          height: 22px;
+          flex: none;
+          order: 0;
+          flex-grow: 0;
+  
+        }
+        .earning-period{
+          display: flex;
+          flex-direction: row;
+          justify-content: center;
+          align-items: center;
+          padding: 12px 8px;
+          gap: 8px;        
+          width: 83px;
+          height: 36px;                
+          border: 0.5px solid #8E8B8A;
+          border-radius: 8px;
+          flex: none;
+          order: 1;
+          flex-grow: 0;
+        }
+        .earning-btn {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          padding: 10px 24px;
+          gap: 8px;
+          width: 100%;
+          height: 40px;       
+          background: #E04800;
+          border: none;
+          border-radius: 56px;        
+          flex: none;
+          order: 0;
+          align-self: stretch;
+          flex-grow: 0;
+        }
+  
+        .dropdown {
+          position: relative;
+          display: inline-block;
+          /* height: 36px; */
+          width: 104px;
+          left: 0px;
+          top: 0px;
+          border: 1px solid #E04800;
+          border-radius: 8px;
+          background-color: white;
+          color: #ffffff;
+          font-size: 14px;        
+          padding: 10px;
+        }
+        
+        .dropdown-btn {
+          background-color: transparent;
+          border: none;
+          cursor: pointer;      
+          color: #e04800;
+          outline: none;
+          font-size: 10px;
+        }
+        
+                
+        
+      </style>
+  
+  
+  
+      <style media="screen">
+        @import url(http://fonts.googleapis.com/css?family=Roboto:400,700,300);
+      
+      .circle-wrap {        
+        grid-template-columns: repeat(1, 160px);
+        grid-gap: 80px;
+        margin-top: 25px;
+        margin-bottom: 33px;
+        margin-left: 50px;
+        width: 150px;
+        height: 135px;
+        background: #d9d7da;
+        border-radius: 50%;
+      }
+      
+      .circle-wrap .circle .mask,
+      .circle-wrap .circle .fill-1,
+      .circle-wrap .circle .fill-2,
+      .circle-wrap .circle .fill-3 {
+        width: 150px;
+        height: 150px;
+        position: absolute;
+        border-radius: 50%;
+      }
+      
+      .circle-wrap .circle .mask {
+        clip: rect(0px, 150px, 150px, 75px);
+      }
+      
+      .circle-wrap .inside-circle {
+        width: 124px;
+        height: 124px;
+        border-radius: 50%;
+        background: #ffffff;
+        line-height: 120px;
+        text-align: center;
+        margin-top: 13px;
+        margin-left: 13px;
+        color: black;
+        position: absolute;
+        z-index: 100;
+        font-weight: 500;
+        font-size: 2em;
+      }
+      
+      /* color animation */
+      
+      .mask .fill-1 {
+        clip: rect(0px, 75px, 150px, 0px);
+        background-color: #ec0c0c;
+      }
+      
+      .mask.full-1,
+      .circle .fill-1 {
+        animation: fill-1 ease-in-out 3s;
+        transform: rotate(153deg);
+      }
+      
+      @keyframes fill-1 {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(153deg);
+        }
+      }
+      
+      .label-earning {
+          position: absolute;
+          left: 230px;
+          top: 170px;
+      }
+      .sign-out {
+        margin-right: 105px;
+    }
+      </style>
+</head>
+<body> 
+  <header>
+	<nav>
+	  <div class="logo">
+		<a href="#"><img src="{% static 'images/dashboard/Lasfund-Logo.svg' %} " alt="Logo"></a>
+	  </div>
+    
+    <!-- navbar search form -->
+	  <div class="search-container">
+      <form action="#">
+        <span class="search-container-border">
+        <input type="text" placeholder="Search...">
+        <button type="submit"><i class="fa fa-search"></i></button>
+      </span>
+      </form>
+    </div>
+    <!-- navbar search form end-->
+
+    
+    <!-- notification icons -->
+    <div class="notification">
+      <span class="navbar-item-notification"><i class="fa fa-envelope"></i>  </span>
+      <span class="navbar-item-notification"> <i class="fa fa-bell"></i>  </span>
+    </div>
+    <!-- notification icons end-->
+
+
+	  <!-- profile  -->
+    <div class="profile">
+      <img src="{% static 'images/dashboard/images/Ellipse 336.png' %}" alt="Profile Avatar" width="50" height="50">
+      <div class="profile-emails">
+        <span class="profile-name">{{firstname}} &nbsp;  {{lastname}}</span>
+        <span class="profile-email">{{email}}</span>
+      </div>
+	  </div>
+    <!-- profile end -->
+
+    <!-- cart icon -->
+    <div class="cart-icon">
+      <!-- <i class="fa fa-shopping-cart"></i> -->
+      <span class="cart-count">3</span>
+      <a href="#" class="w-inline-block"><img src="{% static 'images/dashboard/figma_images/icons/cart.svg' %}" loading="lazy" alt="" class="image"></a>
+    </div>
+    <!-- cart icon end -->
+
+	  <button class="sidebar-toggle"><i class="fa fa-bars"></i></button>
+	</nav>
+  </header>
+
+  <div class="content">
+    <aside>
+      <div>
+        
+        <div class="sidebar-element current-page">
+          <a href="#" class="sidebar-element-link current-page">
+            <i class="fa fa-user"></i>
+            Dashboard
+          </a>
+        </div>
+
+
+        <div class="sidebar-element">
+          <div class="sidebar-element-title"> Analytics</div>
+          <a href="#" class="sidebar-element-link">
+            <!-- <i class="fa fa-home"></i> -->
+            <img src="{% static 'images/dashboard/figma_images/icons/ChartLineUp.svg' %}" class="sidebar-icon" alt="" width="20px" height="20px">
+            Analyzer
+          </a>        
+        
+        
+          <a href="#" class="sidebar-element-link">
+            <!-- <i class="fa fa-envelope"></i> -->
+            <img src="{% static 'images/dashboard/figma_images/icons/CurrencyCircleDollar.svg' %}" class="sidebar-icon" alt="" width="20px" height="20px">
+            Bonus Request
+          </a>
+        </div>
+
+        <div class="sidebar-element">
+          <div class="sidebar-element-title"> Menu</div>
+          <a href="#" class="sidebar-element-link">
+            <i class="fa fa-user"></i>
+            Order
+          </a>
+        </div>
+        
+
+        <div class="sidebar-element">
+          <a href="#" class="sidebar-element-link">
+            <i class="fa fa-cog"></i>
+            Payment Method
+          </a>
+        </div>
+
+        <div class="sidebar-element">
+          <div class="sidebar-element-title"> Personal </div>
+          
+          <a href="#" class="sidebar-element-link">
+            <!-- <i class="fa fa-sign-out"></i> -->
+            <img src="{% static 'images/dashboard/figma_images/icons/UserCircle.svg' %}" class="sidebar-icon" alt="" width="20px" height="20px">
+            Profile
+          </a>
+
+          <a href="#" class="sidebar-element-link notification">
+            <!-- <i class="fa fa-sign-out"></i> -->
+            <img src="{% static 'images/dashboard/figma_images/icons/Bell.svg' %}" class="sidebar-icon" alt="" width="20px" height="20px">
+            Notification <small class="sidebar-notification-count">12</small>
+          </a>
+
+          <a href="#" class="sidebar-element-link">
+            <!-- <i class="fa fa-sign-out"></i> -->
+            <img src="{% static 'images/dashboard/figma_images/icons/Wallet.svg' %}" class="sidebar-icon" alt="" width="20px" height="20px">
+            Wallet
+          </a>
+        </div>
+
+        <div class="sidebar-element">
+          <div class="sidebar-element-title">  </div>
+          
+          <a href="#" class="sidebar-element-link">
+            <!-- <i class="fa fa-sign-out"></i> -->
+            <img src="{% static 'images/dashboard/figma_images/icons/Gear.svg' %}" class="sidebar-icon" alt="" width="20px" height="20px">
+            Settings
+          </a>
+
+          <a href="/logout/" class="sidebar-element-link" style="font-family: 'Poppins';color: #E04800; ">
+            <!-- <i class="fa fa-sign-out"></i> -->
+            <img src="{% static 'images/dashboard/figma_images/icons/SignOut.svg' %}" class="sidebar-icon" alt="" width="20px" height="20px">
+            Sign Out
+          </a>
+          
+        </div>
+
+
+      </div>
+
+      <div class="square-box">
+        <span class="text">Any Questions?</span>
+        <div class="rect-bar">
+          <span class="text">Go to Help Centre</span>
+        </div>        
+      </div>
+
+    </aside>
+    <main><a href="/logout/">
+      <div class="sign-out" style="display:flex;float: right;padding: 0px;gap: 8px;">
+        <img src="{% static 'images/dashboard/figma_images/icons/SignOut.svg' %}" alt="" srcset=""> 
+        <span style="font-family: 'Poppins';font-style: normal;font-weight: 400;font-size: 14px;line-height: 144%;display: flex;align-items: center;color: #E04800; ">
+          Sign Out
+        </span> 
+      </div>  </a> <br><br>
+    <section class="main-section">
+      <div class="dashboard-header header" id="dashboard-header">    
+        <div style="display: flex;flex-direction: column;align-items: flex-start;padding:0px;gap:16px;position: absolute;width: 283px;height: 78px;left: 39px;top: 51px;">
+        <div class="header-title">Dashboard</div>
+        <div class="welcome-message">Welcome back {{firstname |capfirst }}!</div>
+        </div>
+      </div>
+      
+      <div class="grid">
+        <div class="grid-item stock-chart" id="stock-chart-1">
+            <!-- Stock chart content goes here -->    
+            <div class="chart-header">
+              <div class="chart-header-left">
+                <div class="chart-title" style="font-family: 'Poppins';font-style: normal;font-weight: 700;font-size: 20px;line-height: 120%;
+                  color: #0A0300;flex: none;order: 0;flex-grow: 0;">Analyzer</div>
+                <div class="chart-description" style="font-family: 'Poppins';font-style: normal;font-weight: 400;font-size: 14px;
+                    line-height: 144%;color: #E04800; flex: none;order: 1;flex-grow: 0;">Pictorial monthly analytics of market.</div>
+              </div>
+              
+              <div class="chart-options">
+                <div class="dropdown">
+                  <div class="dropdown-btn">Weekly (2022) <span class="dropdown-caret" style="padding-left: 5px;">
+                    <img src="{% static 'images/dashboard/figma_images/icons/analyzer-dropdown.svg' %}" alt=""></span></div>              
+                </div>
+                      
+              </div>
+          </div>  
+    
+            <div class="stock-chart-main">
+              <img src="{% static 'images/dashboard/figma_images/Stock chart.png' %}" alt="" height="90%">
+            </div>
+          </div>
+    
+    
+    
+        <div class="grid-item earning-card">
+          <!-- Earning card content goes here -->
+          
+          <div class="earning-section" id="earning-section-1">
+            <div class="earning-info">
+              <span class="earning-title" style="width: 82px;height: 22px;font-family: 'Poppins';font-style: normal;font-weight: 700;font-size: 18px;line-height: 120%; display: flex;align-items: center;          
+              color: #040100;flex: none;order: 0;flex-grow: 0;">Earnings</span>
+              <span class="earning-period" style=" width: ; height: 12px;font-family: 'Poppins'; font-style: normal; font-weight: 500; font-size: 10px; line-height: 120%;  color: #8E8B8A;  flex: none; order: 1; flex-grow: 0;" 
+                  > this week <img src="{% static 'images/dashboard/figma_images/icons/dropdown.svg' %}" alt="" srcset=""></span>
+            </div>        
+            <div class="circle-wrap">
+              <div class="circle">
+                <div class="mask full-1">
+                  <div class="fill-1"></div>
+                </div>
+                <div class="mask half">
+                  <div class="fill-1"></div>
+                </div>
+                <div class="inside-circle"> 85% </div>
+              </div>
+              <!-- <div class="label-earning">Percentage</div> -->
+          </div>    
+            <button class="earning-btn"> <span style="width: 170px;height: 20px; font-family: 'Poppins';font-style: normal;font-weight: 500;font-size: 14px;line-height: 144%;text-align: center;letter-spacing: 0.001em;color: #FFFFFF;flex: none;order: 0;
+              flex-grow: 1;">  Start trading</span></button>
+          </div>      
+        </div>
+    
+    
+    
+        <div class="grid-item transaction-card">
+          <!-- Frame 238326 content goes here -->
+          <div style="display: flex;flex-direction: row;justify-content: space-between;align-items: center;padding: 8px 16px; width: 676px;
+          height: 38px;flex: none;order: 0;align-self: stretch;flex-grow: 0;">
+            <h4 style="width: 123px; height: 22px; font-family: 'Poppins'; font-style: normal; font-weight: 700; font-size: 18px; line-height: 120%;  color: #000000;  flex: none; order: 0; flex-grow: 0;">Transactions</h4>
+            <h5 style="display: flex;flex-direction: row;align-items: center;padding: 0px;gap: 7px;width: 162px;height: 20px;flex: none;order: 1;
+            flex-grow: 0;"> <span style="width: 139px; height: 20px;  font-family: 'Poppins'; font-style: normal; font-weight: 400; font-size: 14px; line-height: 144%;color: #1148D2;  flex: none; order: 0; flex-grow: 0;">See All Aransactions</span>  
+            <img src="{% static 'images/dashboard/figma_images/icons/CaretUp.svg' %}" alt="" srcset=""> </h5>
+          </div>
+          <table class="transaction-history" id="transaction-table">        
+            <tbody>
+              <tr class="transaction-row" id="transaction-row-1">
+                <td class="transaction-status completed"> 
+                  <img src="{% static 'images/dashboard/figma_images/icons/transaction_status/completed.svg' %}" alt="" srcset="">               
+                  <span style="padding-left: 8px;font-family: 'Plus Jakarta Sans';font-style: normal;font-weight: 500;font-size: 12px;line-height: 20px;  color: #0D5E00;">Completed</span>
+                </td>
+                <td class="transaction-info">Mastercard **** 6442<br>Card payment</td>            
+                <td class="transaction-amount">$99.00</td>
+                <td class="transaction-date">Jan 17, 2022</td>
+              </tr>
+              <tr class="transaction-row" id="transaction-row-2">
+                <td class="transaction-status pending"> 
+                  <img src="{% static 'images/dashboard/figma_images/icons/transaction_status/pending.svg' %}" alt="" srcset="">               
+                  <span style="padding-left: 8px;font-family: 'Plus Jakarta Sans'; font-style: normal;font-weight: 500;font-size: 12px;line-height: 20px; color: #645F00;">Pending </span>
+                </td>
+                <td class="transaction-info">Account **** 5665<br>Card payment</td>            
+                <td class="transaction-amount">$99.00</td>
+                <td class="transaction-date">Dec 17, 2022</td>
+              </tr>
+              <tr class="transaction-row" id="transaction-row-3">
+                <td class="transaction-status canceled">
+                  <img src="{% static 'images/dashboard/figma_images/icons/transaction_status/canceled.svg' %}" alt="" srcset=""> 
+                  <span style="padding-left: 8px;font-family: 'Plus Jakarta Sans'; font-style: normal;font-weight: 500;font-size: 12px;line-height: 20px; color: #600000;"> Canceled</span>  
+                </td>
+                <td class="transaction-info">Mastercard **** 6442<br>Card payment</td>            
+                <td class="transaction-amount">$500.00</td>
+                <td class="transaction-date">Jan 27, 2023</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          
+        </div>
+    
+        <div class="grid-item history-card" id="history-card-1">
+          <!-- History card content goes here -->
+          <div class="History-card-header">        
+              <div><span class="History-card-title">History</span></div>
+              <div style="display: flex;flex-direction: row;justify-content: center;align-items: center;padding: 12px 8px;
+              gap: 8px;width: 83px;border: 0.5px solid rgba(236, 236, 236, 0.88);border-radius: 8px;flex: none;order: 1;flex-grow: 0;">
+              <img src="{% static 'images/dashboard/figma_images/icons/CalendarBlank.svg' %}" alt="" srcset="">
+              <span class="History-card-date">12/2/12</span> </div>      
+          </div>
+          
+          <div class="card-body">
+        
+            <div class="trade-item">    
+              <div  class="trade-details">
+                <span class="trade-type">FX Trade</span>
+                <span class="trade-amount">+$5000.00</span>
+              </div>    
+              <span class="trade-description">Lorem ipsum dolor sit amet consectetur. Nisi sollicitudin</span>        
+            </div>  
+    
+            <div class="trade-item">    
+              <div  class="trade-details">
+                <span class="trade-type">FX Trade</span>
+                <span class="trade-amount">+$5000.00</span>
+              </div>    
+              <span class="trade-description">Lorem ipsum dolor sit amet consectetur. Nisi sollicitudin</span>        
+            </div> 
+    
+            <div class="trade-item">    
+              <div  class="trade-details">
+                <span class="trade-type">FX Trade</span>
+                <span class="trade-amount">+$5000.00</span>
+              </div>    
+              <span class="trade-description">Lorem ipsum dolor sit amet consectetur. Nisi sollicitudin</span>        
+            </div> 
+    
+            <div class="trade-item">    
+              <div  class="trade-details">
+                <span class="trade-type">FX Trade</span>
+                <span class="trade-amount">+$5000.00</span>
+              </div>    
+              <span class="trade-description">Lorem ipsum dolor sit amet consectetur. Nisi sollicitudin</span>        
+            </div> 
+    
+            <div class="trade-item">    
+              <div  class="trade-details">
+                <span class="trade-type">FX Trade</span>
+                <span class="trade-amount">+$5000.00</span>
+              </div>    
+              <span class="trade-description">Lorem ipsum dolor sit amet consectetur. Nisi sollicitudin</span>        
+            </div> 
+    
+            <div class="trade-item">    
+              <div  class="trade-details">
+                <span class="trade-type">FX Trade</span>
+                <span class="trade-amount">+$5000.00</span>
+              </div>    
+              <span class="trade-description">Lorem ipsum dolor sit amet consectetur. Nisi sollicitudin</span>        
+            </div> 
+    
+            
+            
+            <div class="trade-item">        
+              <div class="trade-details">    
+                <span class="trade-type">FX Trade</span>
+                <span class="trade-amount">+$5000.00</span>
+              </div>    
+              <span class="trade-description">Lorem ipsum dolor sit amet consectetur. Nisi sollicitudin</span>        
+            </div>
+        
+          </div>            
+        </div>
+        
+    
+      </div>
+    </section>
+    </main>    
+  </div>
+ 
+  <!-- mobile sidebar -->
+  <div class="sidebar-collapse">
+    <ul>
+      <li>
+        <a href="#">
+          <i class="fa fa-home"></i>
+          Home
+        </a>
+      </li>
+      <li>
+        <a href="#">
+          <i class="fa fa-envelope"></i>
+          Inbox
+        </a>
+      </li>
+      <li>
+        <a href="#">
+          <i class="fa fa-user"></i>
+          Profile
+        </a>
+      </li>
+      <li>
+        <a href="#">
+          <i class="fa fa-cog"></i>
+          Settings
+        </a>
+      </li>
+      <li>
+        <a href="#">
+          <i class="fa fa-sign-out"></i>
+          Logout
+        </a>
+      </li>
+    </ul>
+  </div>
+  <!-- mobile sidebar end -->
+
+  <script src="{% static 'js/dashboard/app.js' %}"></script>
+  <footer>
+   
+    <div class="copyright">
+      &copy; 2023 My Website. All rights reserved.
+    </div>
+    <div class="social-icons">
+      <a href="#"><i class="fa fa-facebook"></i></a>
+      <a href="#"><i class="fa fa-twitter"></i></a>
+      <a href="#"><i class="fa fa-instagram"></i></a>
+      <a href="#"><i class="fa fa-youtube"></i></a>
+      <a href="#"><i class="fa fa-linkedin"></i></a>
+    </div>
+  </footer>
+
+</body>
+</html>
