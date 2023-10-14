@@ -5,20 +5,29 @@ from datetime import timedelta
 import requests
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from rest_framework import generics
+
 from django.contrib.auth import get_user_model
-from store.models import Order, AccountType, Platform, PaymentMethod, Coupon, BillingDetail, Transaction
+from store.models import Order, AccountType, Platform, PaymentMethod, Coupon, Transaction, PaymentDetails
 from users.models import Currency
 from django.shortcuts import redirect
-from users.forms import BillingForm
-from .serializers import TransactionSerializer, OrderSerializer, AccountTypeSerializer, PlatformSerializer, BillingSerializer
+from .serializers import TransactionSerializer, OrderSerializer, AccountTypeSerializer, PlatformSerializer, \
+    PaymentMethodSerializer, PaymentDetailsSerializer, OrdersListSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.contrib import messages
-from rest_framework import status
+
 from users.models import CustomUser
 from rest_framework import serializers
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from rest_framework import generics
+from rest_framework import status
+from .models import Order
+from django.core.files.base import ContentFile
+import base64
+from django.http import Http404
+from django.conf import settings 
 
 
 User = get_user_model()
@@ -38,6 +47,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['id', 'username', 'email', 'first_name', 'last_name'] 
 
+
 class UserDetails(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -47,12 +57,13 @@ class UserDetails(APIView):
         return Response({'user': user_serializer.data})
 
 
+
 class OrdersHistoryList(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
         orders = Order.objects.filter(user=request.user).order_by('-created_at')[:3]
-        serializer = OrderSerializer(orders, many=True)                
+        serializer = OrdersListSerializer(orders, many=True)                
         return Response(serializer.data)
 
 
@@ -62,10 +73,11 @@ class OrderDetailView(APIView):
     def get(self, request, order_id):
         try:
             order = Order.objects.get(id=order_id)
-            serializer = OrderSerializer(order)
+            serializer = OrdersListSerializer(order)
             return Response(serializer.data)
         except Order.DoesNotExist:
             return Response({'error': 'Order not found'}, status=404)
+ 
         
 
 class AccountTypeList(APIView):        
@@ -73,6 +85,19 @@ class AccountTypeList(APIView):
         account_types = AccountType.objects.all()
         serializer = AccountTypeSerializer(account_types, many=True)
         return Response(serializer.data)
+
+
+class CheckAccountType(APIView):
+    def get(self, request, path):
+        try:            
+            account_type = AccountType.objects.get(amount=path)
+            serializer = AccountTypeSerializer(account_type)
+            return Response(serializer.data)
+        except AccountType.DoesNotExist:
+            return Response(
+                {"error": "Account type not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class PlatformsList(APIView):        
@@ -83,93 +108,202 @@ class PlatformsList(APIView):
 
 
 
-# def OrderHistoryDetail(request, pk):
-#     order = get_object_or_404(Order, pk=pk)
-#     return render(request, 'order_history_detail.html', {'order': order})
 
-# @login_required
-# def ChoosePlatform(request, account_type_id):
-#     account_type = AccountType.objects.get(pk=account_type_id)
-#     platforms = Platform.objects.all()    
-#     context = {'account_type': account_type, 'platforms': platforms}
-#     return render(request, 'choose_platform.html', context)
+
 
 
 class CreateOrder(generics.CreateAPIView):
+    queryset = Order.objects.all()
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
-        # account_type_id = request.data.get('account_type')
-        # print("yyyyy", request.data)
-        # try:
-        #     account_type = AccountType.objects.get(id=account_type_id)
-        # except AccountType.DoesNotExist:
-        #     return Response({'error': 'Invalid account type ID'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        serializer_context = {
-            'user': request.user,
-            # 'account_type': account_type
-        }
-                
-        serializer = self.get_serializer(data=request.data, context=serializer_context)
-        serializer.is_valid(raise_exception=True)
-        order = serializer.save()
-        
-        account_types = order.account_type.all()            
-        total_amount = sum(account_type.price for account_type in account_types)
-        order.total_amount = total_amount
-        order.save()
+    def create(self, request, *args, **kwargs):
+        try:
+            # Extract the amount and user id from the POST request data
+            amount = request.data.get('amount').lower()
+            user_id = request.data.get('user')
+            paymentMethod = request.data.get('paymentMethod').lower()
+            notes = request.data.get('notes')
+            currency = request.data.get('currency')                
 
-        return Response({'success': 'Order created successfully', 'order_id': order.id})
+            # Initialize serializers
+            payment_details_serializer = None
+            transaction_serializer = None
+            order_serializer = None
 
-
-
-class BillingCreateUpdateView(generics.CreateAPIView, generics.UpdateAPIView):
-    serializer_class = BillingSerializer
-    permission_classes = [IsAuthenticated]
-    queryset = BillingDetail.objects.all()
-
-    def post(self, request, *args, **kwargs):        
-        serializer_context = {
-            'user': request.user,            
-        }
-        print("userrr", serializer_context)
-        billing_detail = BillingDetail.objects.filter(user=request.user).first()
-        if billing_detail:
-            # Perform update
-            serializer = self.get_serializer(billing_detail, data=request.data)
-        else:
-            # Perform create
-            serializer = self.get_serializer(data=request.data, context=serializer_context)
+            # Try to get the PaymentMethod and AccountType objects
+            payment_method = get_object_or_404(PaymentMethod, name=paymentMethod)
+            account_type = get_object_or_404(AccountType, starting_balance=amount)            
+            user_instance = CustomUser.objects.get(id=user_id)
             
+
+            print("user_instance", user_instance.email)
+
+            # Create payment details data based on paymentMethod
+            if paymentMethod == 'bank-transfer':
+                payment_details_data = {'payment_proof': "None"}   
+            elif paymentMethod == 'cyrptocurrency':
+                payment_details_data = {'crypto_gateway': "None"}   
+            elif paymentMethod == 'paystack':
+                payment_details_data = {'reference': "None"}   
+            elif paymentMethod == 'card_type':
+                payment_details_data = {'payment_proof': "None"}   
         
-        serializer.is_valid(raise_exception=True)
-        billing = serializer.save()
+            # Create PaymentDetailsSerializer
+            payment_details_serializer = PaymentDetailsSerializer(data=payment_details_data)
 
-        return Response({'success': 'Billing created successfully'})
+            if payment_details_serializer.is_valid():
+                print("payment_details_serializer.is_valid():")
+                payment_details = payment_details_serializer.save()
+
+                transaction_data = {
+                    'amount': account_type.setup_fee,
+                    'currency': currency,
+                    'payment_details': payment_details.id
+                }            
+                transaction_serializer = TransactionSerializer(data=transaction_data)
+            else:
+                print("payment_details_serializer.errors", payment_details_serializer.errors)
+                return Response(payment_details_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            print(payment_details.id)
+
+            if transaction_serializer.is_valid():
+                print("transaction_serializer.is_valid():")
+                transaction = transaction_serializer.save()
+
+                order_data = {
+                    'account_type': account_type.id,
+                    'amount': account_type.setup_fee,
+                    'user': user_id,
+                    'transaction': transaction.id,
+                    'payment_method': payment_method.id,
+                    'additional_notes': notes            
+                }
+
+                # Create OrderSerializer
+                order_serializer = OrderSerializer(data=order_data)
+
+                if order_serializer.is_valid():   
+                                 
+                    order = order_serializer.save()                    
+                    context = {
+                            'user': user_instance.email, 'amount': account_type.starting_balance,
+                            'payment_method': payment_method.name, 'setup_fee': account_type.setup_fee,
+                            'status': transaction.status                        
+                            }
+                    
+                    print(context)
+                    # Render the HTML email template
+                    email_subject = "Order created Confirmation"
+                    email_body = render_to_string('order/order_confirm.html', context)
+                    
+                    
+                    send_mail(
+                    email_subject,
+                    email_body,
+                    settings.DEFAULT_FROM_EMAIL,  # Sender's email address
+                    [order.user.email],           # Recipient's email address (user's email)
+                    fail_silently=False,          # Set to True to suppress exceptions if sending fails
+                    html_message=email_body,      # Set the HTML content here
+                )
+                    return Response(order_serializer.data, status=status.HTTP_201_CREATED)
+                else:
+                    payment_details.delete()
+                    transaction.delete()
+                    print("order_serializer.errors", order_serializer.errors)
+                    return Response(order_serializer.errors, status=status.HTTP_400_BAD_REQUEST)                                    
+            else:
+                print("transaction_serializer.errors", transaction_serializer.errors)
+                return Response(transaction_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            print("An error occurred in EXCEPT:", str(e))
+            return Response({"error": "An error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+import os
+import base64
+from django.http import Http404
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .models import Order
+from .serializers import OrderSerializer
+
+
+class PaymentProofUploadAPIView(APIView):
+    ALLOWED_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.pdf'}
+
+    def post(self, request, order_id, format=None):
+        try:
+            # Retrieve the Order object based on the orderId from the URL path
+            order = get_object_or_404(Order, id=order_id)
+        except Order.DoesNotExist:
+            raise Http404("Order does not exist")
     
-# @login_required
-# def OrderCreationDetail(request, order_id):
-#     # Retrieve the order object based on the order_id
-#     order = Order.objects.get(pk=order_id)
+        # Check if a file was uploaded in the request
+        if 'file' not in request.FILES:
+            return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
 
-#     # Render the order detail page with the order object
-#     context = {'order': order}
-#     return render(request, 'order_creation_detail.html', context)
+        print(request.FILES)
+        
+        uploaded_file = request.FILES['file']
+        file_name, file_extension = os.path.splitext(uploaded_file.name)
+        file_extension = file_extension.lower()
+
+        # Check if the file extension is allowed
+        if file_extension not in self.ALLOWED_EXTENSIONS:
+            return Response({'error': 'Invalid file type. Please upload a .docx, .png, .jpg, .jpeg, or .pdf file.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Convert the file content to a string (you may need to adjust this based on the file type)
+        file_content = uploaded_file.read()
+        encoded_file = base64.b64encode(file_content).decode('utf-8')
+        encoded_data = f"data:{uploaded_file.content_type};base64,{encoded_file}"        
+
+        transaction = order.transaction
+        payment_details = transaction.payment_details
+        payment_details.payment_proof = encoded_data
+        payment_details.save()
+
+        # Serialize the updated Order object
+        serializer = OrdersListSerializer(order)
+        print(order.user.email)
+        
+        # Render the HTML email template
+        email_subject = "Order Update Confirmation"
+        email_body = render_to_string('order/order_update.html', {'user': order.user, 'order': order})
+        # print(email_body)
+
+        # Send the email
+        # send_mail(
+        #     email_subject,
+        #     email_body,
+        #     settings.DEFAULT_FROM_EMAIL,  # Sender's email address
+        #     [order.user.email],         # Recipient's email address (user's email)
+        #     fail_silently=False,        # Set to True to suppress exceptions if sending fails
+        # )
+        send_mail(
+                    email_subject,
+                    email_body,
+                    settings.DEFAULT_FROM_EMAIL,  # Sender's email address
+                    [order.user.email],           # Recipient's email address (user's email)
+                    fail_silently=False,          # Set to True to suppress exceptions if sending fails
+                    html_message=email_body,      # Set the HTML content here
+                )
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+       
 
 
 
 
-@login_required
 def ValidateCoupon(request):
     if request.method == 'POST':
         # print(request.POST)
         coupon_code = request.POST.get('coupon_code')
-        order_id = request.POST.get('order_id')
-        # quantity = request.POST.get('quantity')
+        order_id = request.POST.get('order_id')        
         
-
         try:
             coupon = Coupon.objects.get(code=coupon_code)
         except Coupon.DoesNotExist:
@@ -191,7 +325,7 @@ def ValidateCoupon(request):
         discounted_amount = round(total_price * discount, 2)
         
         order = Order.objects.get(id=order_id)
-        order.total_amount = discounted_amount
+        order.amount = discounted_amount
         # order.quantity = quantity
         order.coupon = coupon
         order.coupon_applied = True
@@ -199,254 +333,11 @@ def ValidateCoupon(request):
         
         # discounted_price = round(total_price - discounted_amount, 2)
         # print(discounted_price)
-
-                
-        
+                        
         coupon.expiry_date = timezone.now() - timedelta(days=1)  # set expiry date to a past date
         coupon.save()        
         
         # except:
         #     print("Error adding coupon to order")
         return JsonResponse({'discounted_price': discounted_amount})
-    
-
-    
-
-class CheckOutAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-    def post(self, request):
-        payment_method_id = request.data.get('payment_method')
-        # payment_method = PaymentMethod.objects.get(id=payment_method_id)
-        payment_method = payment_method_id
-                        
-        order_id = request.data.get('order_id')        
-        order = Order.objects.get(id=order_id)        
-        billing = None
-        print("oorrdderr  ",order, payment_method)
-        if order_id and order:                          
-            order.payment_method = str(payment_method)            
-                        
-            account_types = order.account_type.all()            
-            total_amount = sum(account_type.price for account_type in account_types)
-            order.total_amount = total_amount
-            order.save()
-            # if order.coupon_applied:
-            #     price = order.account_type.price
-            #     print("coupon applied", price)                
-            # else:
-            #     price = order.account_type.price
-            #     print("no coupon applied", price)
-            #     order.total_amount = price
-            #     order.save()
-                
-            billing_query = BillingDetail.objects.filter(user=request.user)
-            if billing_query.exists():
-                billing = BillingDetail.objects.get(user=request.user)                                    
-            else:            
-                billing = BillingDetail.objects.create(user=request.user)                                    
-                                
-            billing.payment_method = payment_method            
-            billing.save()
-            print("xxxxxxxxx",  billing.payment_method)
-            
-            payment_gateway = str(billing.payment_method.lower())
-            if payment_gateway == 'paystack': 
-                return redirect('store:payment_paystack', order.id)
-            elif payment_gateway == 'cryptocurrency':
-                return redirect('store:payment_crypto', order.id)
-            elif payment_gateway == 'credit-debit-card':
-                return redirect('store:payment_card', order.id)
-            else:
-                return redirect('store:payment_bank', order.id)
-        
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        
-        
-        
-# from users.models import CustomUser  
-      
-
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.permissions import IsAuthenticated      
-      
-@api_view(['POST', 'GET'])
-@permission_classes([IsAuthenticated])  
-def paystack_payment(request, order_id):
-    order = Order.objects.get(id=order_id)
-    amount = order.total_amount
-
-    currency = request.user.currency
-    print(order, currency, amount, currency.code)
-
-    # initialize the payment on Paystack
-    # get the authorization URL
-    paystack_secret_key = 'sk_test_7d62ed19dd419369ae385972349faa54bd7b4edc'
-    headers = {'Authorization': f'Bearer {paystack_secret_key}'}
-    payload = {
-        'amount': int(amount) * 100,  # Paystack API  amount in kobo (1 NGN = 100 kobo)
-        'currency': str(currency.code),
-        'email': request.user.email,
-        'callback_url': request.build_absolute_uri('/payment/callback/'),  #  callback URL to handle the payment verification
-    }
-    response = requests.post('https://api.paystack.co/transaction/initialize', headers=headers, json=payload)
-    print("response!!", response, request)
-    if response.status_code == 200:
-        authorization_url = response.json()['data']['authorization_url']
-
-        transaction = Transaction.objects.create(
-            reference=response.json()['data']['reference'],
-            user=request.user,
-            order=order,
-            status='pending',
-            payment_method='paystack',
-            amount=amount,
-            currency=(currency.code),
-        )
-        transaction.save()
-        print("######## payment 200 ########", response.json()['data'])
-        return Response({'authorization_url': authorization_url})
-    else:
-        print("######## payment !200 ########", response.json())
-        return Response({'error': 'Payment initialization failed.'}, status=400)
-
-
-
-@api_view(['POST', 'GET'])
-@permission_classes([IsAuthenticated])  
-def crypo_payment(request, order_id):
-    order = Order.objects.get(id=order_id)             
-    amount = order.total_amount        
-    currency_id = request.user.currency.id        
-    currency = Currency.objects.get(id=currency_id)
-    print(order, currency, amount)
-                
-    response_code = 400
-    print("response code:", response_code)
-    
-    if response_code == 400:            
-        transaction = Transaction.objects.create(                
-            user=request.user,
-            order=order,
-            status='canceled',
-            payment_method='cryptocurrency',  
-            amount=amount,
-            currency=(currency.code),                
-        )
-        transaction.save()                              
-        return JsonResponse({'status': 'failure', 'message': 'Payment initialization failed.'})
-    else:
-        return JsonResponse({'status': 'success'})
-
-
-@api_view(['POST', 'GET'])
-@permission_classes([IsAuthenticated])  
-def bank_payment(request, order_id):
-        order = Order.objects.get(id=order_id)             
-        amount = order.total_amount        
-        currency_id = request.user.currency.id        
-        currency = Currency.objects.get(id=currency_id)
-        print(order, currency, amount)
-                
-        response = 300
-        print("response!!", response)
-        if response == 300:            
-                        
-            transaction = Transaction.objects.create(                
-                user=request.user,
-                order = order,
-                status='pending',
-                payment_method='bank',  
-                amount=amount,
-                currency=(currency.code),                
-            )
-            transaction.save()
-                              
-            return JsonResponse({'status': 'failure', 'message': 'Payment initialization failed.'})
-        else:
-            return JsonResponse({'status': 'success'})
-
-
-@api_view(['POST', 'GET'])
-@permission_classes([IsAuthenticated])  
-def card_payment(request, order_id):
-        order = Order.objects.get(id=order_id)             
-        amount = order.total_amount
-        try:
-            currency_id = request.user.currency.id
-        except:
-            currency_id = 3
-        currency = Currency.objects.get(id=currency_id)
-        print(order, currency, amount)
-                
-        response = 200
-        print("response!!", response)
-        if response == 200:            
-                        
-            transaction = Transaction.objects.create(                
-                user=request.user,
-                order = order,
-                status='completed',
-                payment_method='card',  
-                amount=amount,
-                currency=(currency.code),                
-            )
-            transaction.save()                              
-            return JsonResponse({'status': 'success'})
-        else:
-            return JsonResponse({'status': 'failure', 'message': 'Payment initialization failed.'})
-    
-
-
-from django.http.response import JsonResponse, HttpResponseRedirect
-from django.urls import reverse
-from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponseBadRequest
-@csrf_exempt  
-def paystack_callback(request):
-    if request.method == 'GET':
-        reference_id = request.GET.get('reference')
-        url = f'https://api.paystack.co/transaction/verify/{reference_id}'
-        paystack_secret_key = 'sk_test_7d62ed19dd419369ae385972349faa54bd7b4edc'
-        headers = {'Authorization': f'Bearer {paystack_secret_key}'}
-
-        response = requests.get(url, headers=headers)
-
-        if response.status_code == 200:
-            data = response.json()['data']
-            # print(data)
-            # print(request.GET)
-            amount = response.json()['data']['amount'] / 100  
-            transaction = Transaction.objects.get(reference=reference_id)
-            transaction.status = 'completed'
-            transaction.amount = amount            
-            transaction.card_last_4_digits = response.json()['data']['authorization']['last4']
-            transaction.save()
-            print("xxxxxx", transaction.order)
-            order = Order.objects.get(id=transaction.order.id)
-            order.paid = True
-            order.order_stage = 'active'
-            order.order_status = 'success'
-            order.save()
-            print(order)                        
-            messages.success(request, 'Payment completed.')
-            # return JsonResponse({'status': 'success', 'message': 'Payment completed.'})
-            return redirect('http://lasfunding.com/user/dashboard.html')
-        else:
-            transaction = Transaction.objects.get(reference=reference_id)
-            transaction.status = 'canceled'
-            transaction.save()            
-            print('Transaction verification failed')
-            print(response.text)
-            # return JsonResponse({'status': 'error', 'message': 'Payment failed.'})
-            return redirect('http://lasfunding.com/user/dashboard.html')
-                
-    else:
-        # elif event == 'charge.failed':
-        #     reference = request.POST['data']['reference']
-        #     transaction = Transaction.objects.get(reference=reference)
-        #     transaction.status = 'canceled'
-        messages.success(request, 'Payment failed.')  
-        # return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
-        return redirect('http://lasfunding.com/user/dashboard.html')
     

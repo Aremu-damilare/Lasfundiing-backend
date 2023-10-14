@@ -1,0 +1,47 @@
+
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Order Confirmation!</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border-collapse: collapse; margin: 30px auto; background-color: #ffffff; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
+        <!-- Header Section -->
+        <tr>
+            <td align="center" bgcolor="white" style="padding: 20px 0;text-align: center;">
+                <img src="https://lasfunding.com/images/Lasfund-Logo.svg" alt="Logo" width="150" height="50" style="display: block;">
+            </td>
+        </tr>
+        <!-- Content Section -->
+        <tr>
+            <td style="padding: 20px; text-align: center;">
+                <h1 style="font-size: 24px;text-align:center; color: #333; margin-bottom: 20px;">Dear {{ user }},</h1>
+                <p style="font-size: 16px; color: #666;">Your order has been successfully created. Here are the details </p>
+                
+                <p>Thank you for shopping with us!</p>
+                <div>
+                   <span>Setup fee: <b> ${{setup_fee}}</b></span>                    
+                </div>
+                <div>
+                    <span> Account type: <b>${{amount}}</b></span>                    
+                </div>
+                <div>
+                    <span> Payment method: <b>{{payment_method}}</b></span>
+                </div>
+                <div>
+                    <span> Status: <b>{{status}}</b></span>                    
+                </div>
+                
+            </td>
+        </tr>
+        <!-- Footer Section -->
+        <tr>
+            <td align="center" bgcolor="#e04800" style="padding: 10px 0; color: #fff; font-size: 14px;">
+                2023 &copy; Lasfunding. All rights reserved.
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

@@ -1,13 +1,51 @@
-{% extends "account/email/base_message.txt" %}
+{% comment %} {% extends "account/email/base_message.txt" %} {% endcomment %}
 {% load account %}
 {% load i18n %}
 
-{% block content %}{% autoescape off %}
+{% block content %}
+{% autoescape off %}
 {% user_display user as user_display %}
 {% blocktrans with site_name=current_site.name site_domain=current_site.domain %}
-You're receiving this e-mail because your e-mail address was used to register an account on {{ site_domain }}.
-<a href="#">###</a>
-To confirm this is correct, go to {{ activate_url }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign up Email Template</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border-collapse: collapse; margin: 30px auto; background-color: #ffffff; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
+        <!-- Header Section -->
+        <tr>
+            <td align="center" bgcolor="white" style="padding: 20px 0;">
+                <img src="https://lasfunding.com/images/Lasfund-Logo.svg" alt="Logo" width="150" height="50" style="display: block;">
+            </td>
+        </tr>
+        <!-- Content Section -->
+        <tr>
+            <td style="padding: 20px;">
+                <h1 style="font-size: 24px;text-align:center; color: #333; margin-bottom: 20px;">Sign up on Lasfunding was successful</h1>
+                <p style="font-size: 16px; color: #666;">You're receiving this e-mail because someone has given 
+                    your e-mail address to register an account on <span style="color: #e04800;" >{{site_domain}}</span> </p>
+                
+                <!-- Allauth Content -->                                
+                <p style="font-size: 16px; color: #666;">
+                <a href="{{ activate_url }}" style="color: #e04800;">Click here</a> 
+                or to confirm this is correct, go to this url  <a href="{{ activate_url }}" style="color: #e04800;">{{ activate_url }}</a> to confirm email ownership.
+                </p>
+                <!-- End of Allauth Content -->
+                
+            </td>
+        </tr>
+        <!-- Footer Section -->
+        <tr>
+            <td align="center" bgcolor="#e04800" style="padding: 10px 0; color: #fff; font-size: 14px;">
+                2023 &copy; Lasfunding. All rights reserved.
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
 {% endblocktrans %}
 {% endautoescape %}
 {% endblock %}

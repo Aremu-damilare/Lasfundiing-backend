@@ -1,18 +1,20 @@
 from rest_framework import serializers
-from .models import Transaction, AccountType, Order, Platform, BillingDetail, PaymentMethod
+from .models import Transaction, AccountType, Order, Platform, PaymentMethod, PaymentDetails
+from rest_framework import exceptions
+
 
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
-        fields = ('id', 'status', 'payment_method', 'amount', 'currency', 'reference', 'created_at', 'updated_at')
+        fields = '__all__'
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation['user'] = instance.user.username
-        representation['order'] = instance.order.id
-        representation['card_last_4_digits'] = instance.card_last_4_digits[-4:] if instance.card_last_4_digits else None
-        representation['bank_last_4_digits'] = instance.bank_last_4_digits[-4:] if instance.bank_last_4_digits else None
-        return representation
+    # def to_representation(self, instance):
+    #     representation = super().to_representation(instance)
+    #     representation['user'] = instance.user.username
+    #     representation['order'] = instance.order.id
+    #     representation['card_last_4_digits'] = instance.card_last_4_digits[-4:] if instance.card_last_4_digits else None
+    #     representation['bank_last_4_digits'] = instance.bank_last_4_digits[-4:] if instance.bank_last_4_digits else None
+    #     return representation
     
 
 class PlatformSerializer(serializers.ModelSerializer):
@@ -20,45 +22,68 @@ class PlatformSerializer(serializers.ModelSerializer):
         model = Platform
         fields = ('id',  'platform', 'description')
       
+
+class PaymentMethodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentMethod
+        fields = '__all__'
+        
+
+class PaymentDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentDetails
+        fields = '__all__'
         
         
 class AccountTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = AccountType
-        fields = ('id', 'features', 'description', 'price', 'amount')
+        fields = '__all__'
+        
+    def validate(self, data):
+        if not data.get('balance'):
+            raise exceptions.ValidationError({'balance': 'This field is required.'})
+        if not data.get('profit_target'):
+            raise exceptions.ValidationError({'profit_target': 'This field is required.'})
+        if not data.get('profit_share'):
+            raise exceptions.ValidationError({'profit_share': 'This field is required.'})
+        if not data.get('next_step_target'):
+            raise exceptions.ValidationError({'next_step_target': 'This field is required.'})
+        if not data.get('account_fee'):
+            raise exceptions.ValidationError({'account_fee': 'This field is required.'})
 
-
+        return data
+    
 
 class OrderSerializer(serializers.ModelSerializer):
-    account_type = AccountTypeSerializer(many=True)
-    platform = PlatformSerializer()
+    # account_type = AccountTypeSerializer()
+    # transaction = TransactionSerializer()
+    # payment_method = PaymentMethodSerializer()
+    
     class Meta:
         model = Order
-        fields = ('id', 'order_number', 'total_amount', 'coupon', 'order_status', 'order_stage', 
-                   'paid', 'platform', 'account_type', 'coupon_applied', 'additional_notes', 'payment_method', 'created_at', 'updated_at')
+        fields ='__all__'
 
-    def create(self, validated_data):
-        print("qqqqqqqqq", validated_data, self.context)
-        user = self.context['user']
-        print("pppppppppp", self.context)
-        validated_data['user'] = user
-        return super().create(validated_data)
-        
-   
-        
-
-
-
-
-class BillingSerializer(serializers.ModelSerializer):    
+    # def create(self, validated_data):
+    #     print("qqqqqqqqq", validated_data, self.context)
+    #     user = self.context['user']
+    #     print("pppppppppp", self.context)
+    #     validated_data['user'] = user
+    #     return super().create(validated_data)
+ 
+ 
+class TransactionDetailSerializer(serializers.ModelSerializer):
+    payment_details = PaymentDetailsSerializer()
     class Meta:
-        model = BillingDetail
-        fields = ['first_name', 'last_name', 'address', 'phone', 'city', 'state', 'payment_method']
-        
-    def create(self, validated_data):
-        print("qqqqqqqqq", validated_data, self.context)
-        user = self.context['user']        
-        validated_data['user'] = user
-        return super().create(validated_data)
+        model = Transaction
+        fields = '__all__'        
+   
+class OrdersListSerializer(serializers.ModelSerializer):
+    account_type = AccountTypeSerializer()
+    transaction = TransactionDetailSerializer()
+    payment_method = PaymentMethodSerializer()
+    class Meta:
+        model = Order
+        fields ='__all__'
 
-    
+

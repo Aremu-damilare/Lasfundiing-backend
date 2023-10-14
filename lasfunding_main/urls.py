@@ -17,17 +17,25 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib.auth.decorators import login_required
-# from .views import  Dashboard
-
+from dj_rest_auth.views import PasswordResetView, PasswordResetConfirmView
+from dj_rest_auth.views import PasswordChangeView
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),    
+    path('admin/standard/', admin.site.urls),    
     path('dj-rest-auth/', include('dj_rest_auth.urls')),
     path('dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')),
+    path('password-reset/', PasswordResetView.as_view()),
+    path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),  
+    path('password/change/', PasswordChangeView.as_view(), name='rest_password_change'),
+    
     path('', include('users.urls')),    
-    path('', include('store.urls')),    
+    
+    path('admin/', include('users.urls_admin')),    
+    path('admin/store/', include('store.urls_admin')),    
+    
+    path('', include('store.urls')),
+    path('', include('ticket.urls'))    
     # path('', Home, name='home'),
     # path('dashboard/', login_required(Dashboard.as_view()), name='dashboard'),
 ]

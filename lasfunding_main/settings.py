@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "corsheaders",
     'users',
     'store',
+    'ticket',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -200,16 +201,17 @@ REST_AUTH_REGISTER_SERIALIZERS = {
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.titan.email'
+EMAIL_HOST = 'mail.webcloner.net'
 EMAIL_PORT = 465  
 EMAIL_USE_SSL = True
-EMAIL_HOST_USER = 'info@lasfunding.com'
+EMAIL_HOST_USER = 'admin@webcloner.net'
 EMAIL_HOST_PASSWORD = 'Superadmin1000$'
-DEFAULT_FROM_EMAIL = 'info@lasfunding.com'
+DEFAULT_FROM_EMAIL = 'admin@webcloner.net'
 
 
 
 # Configure the email templates
+# email_confirmation_message
 ACCOUNT_EMAIL_CONFIRMATION_SUBJECT = 'account/email/email_confirmation_subject.txt'
 ACCOUNT_EMAIL_CONFIRMATION_COOLDOWN = 1800
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 7
@@ -219,7 +221,10 @@ ACCOUNT_EMAIL_CONFIRMATION_MESSAGE = 'account/email/email_confirmation_message.h
 
 
 ACCOUNT_ADAPTER = 'users.adapter.DefaultAccountAdapterCustom'
-LOGIN_URL_FRONT = 'http://lasfunding.com:8000/'
+LOGIN_URL_FRONT = 'http://localhost/lasfunding_front/#/#signin/'
+RESET_PASSWORD_URL_FRONT = 'http://localhost/lasfunding_front/confirm-forgot-password.php'
+BACKEND_URL = 'http://localhost:8000/'
+
 
 from datetime import timedelta
 SIMPLE_JWT = {
@@ -253,3 +258,9 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(days=1),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+
+
+# Define the MEDIA_ROOT and MEDIA_URL
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+OLD_PASSWORD_FIELD_ENABLED = True
