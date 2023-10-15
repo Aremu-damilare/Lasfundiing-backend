@@ -137,9 +137,9 @@ class WithdrawalMethodDetail(APIView):
 
 class WithdrawalList(APIView):
     def get(self, request):
-        withdrawals = Withdrawal.objects.all()
+        withdrawals = Withdrawal.objects.filter(user=request.user)
         serializer = WithdrawalSerializer(withdrawals, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
         user = request.user
