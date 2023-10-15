@@ -223,7 +223,7 @@ ACCOUNT_EMAIL_CONFIRMATION_MESSAGE = 'account/email/email_confirmation_message.h
 ACCOUNT_ADAPTER = 'users.adapter.DefaultAccountAdapterCustom'
 LOGIN_URL_FRONT = 'https://lasfunding.com/#/#signin/'
 RESET_PASSWORD_URL_FRONT = 'https://lasfunding.com/confirm-forgot-password.php'
-BACKEND_URL = 'https://lasfunding.com:8000/'
+BACKEND_URL = 'https://lasfunding.com:8080/'
 
 
 from datetime import timedelta
