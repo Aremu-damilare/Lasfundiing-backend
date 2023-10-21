@@ -3,7 +3,7 @@ from users.models import CustomUser
 from django.utils import timezone
 import uuid
 from django.core.exceptions import ValidationError
-
+import random
 
 
 def default_features():
@@ -41,7 +41,12 @@ class Coupon(models.Model):
 
 
 
-class Order(models.Model):
+class Order(models.Model):    
+    def generate_unique_id():
+        while True:
+            unique_id = random.randint(10**11, 10**12 - 1)
+            if not Order.objects.filter(id=unique_id).exists():
+                return unique_id
     
     ORDER_STATUS_CHOICES = (
     ('pending', 'Pending'),
@@ -60,8 +65,9 @@ class Order(models.Model):
       
     
     account_type = models.ForeignKey('AccountType',  on_delete=models.DO_NOTHING, null=True)
-    platform = models.ForeignKey('Platform', on_delete=models.DO_NOTHING, blank=True, null=True)
-    id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+    platform = models.ForeignKey('Platform', on_delete=models.DO_NOTHING, blank=True, null=True)    
+    id = models.PositiveIntegerField(primary_key=True, default=generate_unique_id, unique=True)
+    # id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     amount = models.DecimalField(max_digits=8, decimal_places=2, null=True)    
     coupon = models.ForeignKey(Coupon, null=True, blank=True, on_delete=models.DO_NOTHING)
     status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='pending', null=True)

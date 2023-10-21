@@ -1,5 +1,4 @@
 from django.db import transaction
-from rest_framework import serializers
 from dj_rest_auth.registration.serializers import RegisterSerializer
 from .models import Currency, WithdrawalMethod, Withdrawal
 from rest_framework import status
@@ -90,6 +89,8 @@ class KYCSerializer(serializers.ModelSerializer):
     class Meta:
         model = KYC
         fields = '__all__'
+    
+    
 
 
 class WithdrawalMethodSerializer(serializers.ModelSerializer):

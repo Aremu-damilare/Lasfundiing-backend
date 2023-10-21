@@ -31,17 +31,18 @@ class KYC(models.Model):
 
     TYPE_CHOICES = (
         ('drivers_license', "Driver's License"),
+        ('voters_card', "Voter's Card"),
         ('NIN', 'National Identification Number (NIN)'),
         ('international_passport', 'International Passport'),
     )
 
-    user = models.OneToOneField('CustomUser', on_delete=models.CASCADE)
+    user = models.OneToOneField('CustomUser', on_delete=models.CASCADE, null=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     type = models.CharField(max_length=150, choices=TYPE_CHOICES)
     file1 = models.FileField(upload_to='kyc_files/')
-    file2 = models.FileField(upload_to='kyc_files/')
-    # created_at = models.DateTimeField(auto_now_add=True)
-    # updated_at = models.DateTimeField(auto_now=True)
+    file2 = models.FileField(upload_to='kyc_files/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
         return f'KYC for {self.user.username} - {self.status()}'
@@ -92,7 +93,7 @@ class Withdrawal(models.Model):
         ('pending', 'Pending'),
     )
 
-    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE) 
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, null=True) 
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     # method = models.ForeignKey('WithdrawalMethod', on_delete=models.CASCADE)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')

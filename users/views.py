@@ -17,6 +17,11 @@ from django.http import HttpRequest
 from rest_framework.test import APIClient
 from rest_framework.response import Response
 from django.shortcuts import redirect
+from rest_framework import generics, permissions
+from .models import KYC, WithdrawalMethod, Withdrawal
+from .serializers import KYCSerializer, WithdrawalMethodSerializer, WithdrawalSerializer
+
+
 
 
 User = get_user_model()
@@ -72,9 +77,7 @@ class NewEmailConfirmation(APIView):
 
 
 
-from rest_framework import generics, permissions
-from .models import KYC, WithdrawalMethod, Withdrawal
-from .serializers import KYCSerializer, WithdrawalMethodSerializer, WithdrawalSerializer
+
 
 
 class KYCListCreateView(generics.ListCreateAPIView):
@@ -181,3 +184,44 @@ class WithdrawalDetail(APIView):
             withdrawal.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
+    
+    
+
+
+
+from rest_framework.permissions import IsAuthenticated
+
+class KYCCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):        
+        kyc = KYC.objects.get(user=self.request.user)
+        return kyc
+
+    def get(self, request):
+        serializer = KYCSerializer(self.get_queryset())
+        return Response(serializer.data)
+    
+    def post(self, request):
+        user = request.user
+        kycs = KYC.objects.filter(user=user)
+
+        if kycs.exists():
+            # Update existing KYC record if status is "rejected"
+            kyc = kycs.first()
+            serializer = KYCSerializer(kyc, data=request.data, partial=True)  # Use partial=True to allow partial updates
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # Remove "user" from the request data for new KYC creation
+            request_data = request.data.copy()
+            request_data.pop('user', None)
+
+            # Create a new KYC record
+            serializer = KYCSerializer(data=request_data)
+            if serializer.is_valid():
+                serializer.save(user=user)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

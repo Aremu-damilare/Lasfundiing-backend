@@ -22,7 +22,7 @@ from dj_rest_auth.views import PasswordChangeView
 
 
 urlpatterns = [
-    path('admin/standard/', admin.site.urls),    
+    path('admin/', admin.site.urls),    
     path('dj-rest-auth/', include('dj_rest_auth.urls')),
     path('dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')),
     path('password-reset/', PasswordResetView.as_view()),
@@ -31,8 +31,10 @@ urlpatterns = [
     
     path('', include('users.urls')),    
     
-    path('admin/', include('users.urls_admin')),    
-    path('admin/store/', include('store.urls_admin')),    
+    path('custom/admin/', include('users.urls_admin')),    
+    path('custom/admin/store/', include('store.urls_admin')),    
+    
+    path('custom/admin/ticket/', include('ticket.urls_admin')),    
     
     path('', include('store.urls')),
     path('', include('ticket.urls'))    
@@ -43,3 +45,6 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Ticket, TicketComment
-from .serializers import TicketSerializer, TicketCommentSerializer
+from .serializers import TicketSerializer, TicketCommentSerializer, TicketCommentViewSerializer
 from django.http import Http404
 from rest_framework.permissions import IsAuthenticated 
 
@@ -60,8 +60,8 @@ class TicketCommentListCreateView(APIView):
     
     def get(self, request, ticket_id):
         user_id = request.user.id
-        ticket_comments = TicketComment.objects.filter(ticket_id=ticket_id, user_id=user_id)
-        serializer = TicketCommentSerializer(ticket_comments, many=True)
+        ticket_comments = TicketComment.objects.filter(ticket_id=ticket_id)
+        serializer = TicketCommentViewSerializer(ticket_comments, many=True)
         return Response(serializer.data)
 
     def post(self, request, ticket_id):

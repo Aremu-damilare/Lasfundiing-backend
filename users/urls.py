@@ -25,6 +25,8 @@ urlpatterns = [
     path('withdrawals/', views.WithdrawalList.as_view(), name='withdrawal-list'),
     path('withdrawal/<int:withdrawal_id>/', views.WithdrawalDetail.as_view(), name='withdrawal-detail'),
     
+    path('kyc/create/', views.KYCCreateView.as_view(), name='create-kyc'),
+    
           
     path('account-confirm-email/',  VerifyEmailView.as_view(), name='account_email_verification_sent'),    
     path('resend-email/', NewEmailConfirmation.as_view(), name='resend_email_confirmation'),        
