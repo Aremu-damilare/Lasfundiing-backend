@@ -224,15 +224,15 @@ ACCOUNT_EMAIL_CONFIRMATION_MESSAGE = 'account/email/email_confirmation_message.h
 ACCOUNT_ADAPTER = 'users.adapter.DefaultAccountAdapterCustom'
 
 # live
-LOGIN_URL_FRONT = 'https://lasfunding.com/#/#signin/'
-RESET_PASSWORD_URL_FRONT = 'https://lasfunding.com/confirm-forgot-password.php'
-BACKEND_URL = 'https://lasfunding.com:8080/'
+# LOGIN_URL_FRONT = 'https://lasfunding.com/#/#signin/'
+# RESET_PASSWORD_URL_FRONT = 'https://lasfunding.com/confirm-forgot-password.php'
+# BACKEND_URL = 'https://lasfunding.com:8080/'
 
 
 # local
-# LOGIN_URL_FRONT = 'http://localhost/lasfunding_front/#/#signin/'
-# RESET_PASSWORD_URL_FRONT = 'http://localhost/lasfunding_front/confirm-forgot-password.php'
-# BACKEND_URL = 'http://localhostm:8080/'
+LOGIN_URL_FRONT = 'http://localhost/lasfunding_front/#/#signin/'
+RESET_PASSWORD_URL_FRONT = 'http://localhost/lasfunding_front/confirm-forgot-password.php'
+BACKEND_URL = 'http://localhostm:8080/'
 
 
 from datetime import timedelta
