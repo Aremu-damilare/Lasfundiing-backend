@@ -9,6 +9,12 @@ class UsersSerializer(serializers.ModelSerializer):
         fields = ['email']
 
 
+class TicketsSerializer(serializers.ModelSerializer):
+    user = UsersSerializer()
+    class Meta:
+        model = Ticket
+        fields = '__all__'
+
 class TicketSerializer(serializers.ModelSerializer):
     # user = UsersSerializer()
     class Meta:

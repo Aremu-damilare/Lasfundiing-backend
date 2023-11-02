@@ -20,7 +20,10 @@ from django.shortcuts import redirect
 from rest_framework import generics, permissions
 from .models import KYC, WithdrawalMethod, Withdrawal
 from .serializers import KYCSerializer, WithdrawalMethodSerializer, WithdrawalSerializer
-
+from rest_framework.permissions import IsAuthenticated
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.conf import settings 
 
 
 
@@ -44,7 +47,6 @@ def verify_email(request, key):
         # Handle error (e.g. display error message)
         # print("Returning home..........")
         return redirect('https://lasfunding.com/#/#signin/')
-
     
 
 class Logout(LogoutView):
@@ -53,7 +55,6 @@ class Logout(LogoutView):
     def get(self, request, *args, **kwargs):
         logout(request)
         return HttpResponseRedirect(reverse('home'))
-
 
 
 class NewEmailConfirmation(APIView):
@@ -74,10 +75,6 @@ class NewEmailConfirmation(APIView):
             except APIException:
                 return Response({'message': 'This email does not exist, please create a new account'}, 
                                 status=status.HTTP_403_FORBIDDEN)
-
-
-
-
 
 
 class KYCListCreateView(generics.ListCreateAPIView):
@@ -136,8 +133,6 @@ class WithdrawalMethodDetail(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 class WithdrawalList(APIView):
     def get(self, request):
         withdrawals = Withdrawal.objects.filter(user=request.user)
@@ -150,9 +145,22 @@ class WithdrawalList(APIView):
         serializer = WithdrawalSerializer(withdrawal, data=request.data, partial=True)
         if serializer.is_valid():                        
             serializer.save()
+            
+             # Render the HTML email template
+            email_subject_admin = "@admin: Withdrawal request Notification"
+            email_body_admin = render_to_string('withdrawal/withdrawal_new.html', {'withdrawal': withdrawal,  'user': user.email})
+                                
+            send_mail(
+            email_subject_admin,
+            email_body_admin,
+            settings.DEFAULT_FROM_EMAIL,  # Sender's email address
+            [settings.ADMIN_EMAILS],           # Recipient's email address (user's email)
+            fail_silently=False,          # Set to True to suppress exceptions if sending fails
+            html_message=email_body_admin,      # Set the HTML content here
+            )
+            
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class WithdrawalDetail(APIView):
@@ -184,12 +192,7 @@ class WithdrawalDetail(APIView):
             withdrawal.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
-    
-    
-
-
-
-from rest_framework.permissions import IsAuthenticated
+        
 
 class KYCCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -207,11 +210,29 @@ class KYCCreateView(APIView):
         kycs = KYC.objects.filter(user=user)
 
         if kycs.exists():
+            for kyc in kycs:
+                if kyc.status == "approved":
+                    return Response("approved", status=status.HTTP_400_BAD_REQUEST)
+                
             # Update existing KYC record if status is "rejected"
             kyc = kycs.first()
             serializer = KYCSerializer(kyc, data=request.data, partial=True)  # Use partial=True to allow partial updates
             if serializer.is_valid():
                 serializer.save()
+                
+                # Render the HTML email template
+                email_subject_admin = "@admin: KYC new Notification"
+                email_body_admin = render_to_string('kyc/kyc_new.html', {'user': user.email})
+                                    
+                send_mail(
+                email_subject_admin,
+                email_body_admin,
+                settings.DEFAULT_FROM_EMAIL,  # Sender's email address
+                [settings.ADMIN_EMAILS],           # Recipient's email address (user's email)
+                fail_silently=False,          # Set to True to suppress exceptions if sending fails
+                html_message=email_body_admin,      # Set the HTML content here
+                )
+                        
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
@@ -223,5 +244,19 @@ class KYCCreateView(APIView):
             serializer = KYCSerializer(data=request_data)
             if serializer.is_valid():
                 serializer.save(user=user)
+                
+                # Render the HTML email template
+                email_subject_admin = "@admin: KYC update Notification"
+                email_body_admin = render_to_string('kyc/kyc_update.html', {'user': user.email})
+                                    
+                send_mail(
+                email_subject_admin,
+                email_body_admin,
+                settings.DEFAULT_FROM_EMAIL,  # Sender's email address
+                [settings.ADMIN_EMAILS],           # Recipient's email address (user's email)
+                fail_silently=False,          # Set to True to suppress exceptions if sending fails
+                html_message=email_body_admin,      # Set the HTML content here
+                )
+                
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

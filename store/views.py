@@ -194,7 +194,7 @@ class CreateOrder(generics.CreateAPIView):
                     
                     print(context)
                     # Render the HTML email template
-                    email_subject = "Order created Confirmation"
+                    email_subject = "New Order Notification"
                     email_body = render_to_string('order/order_confirm.html', context)
                     
                     
@@ -205,6 +205,19 @@ class CreateOrder(generics.CreateAPIView):
                     [order.user.email],           # Recipient's email address (user's email)
                     fail_silently=False,          # Set to True to suppress exceptions if sending fails
                     html_message=email_body,      # Set the HTML content here
+                )
+                    
+                    # Render the HTML email template
+                    email_subject_admin = "@admin: New Order Notification"
+                    email_body_admin = render_to_string('order/order_confirm.html', context)
+                                        
+                    send_mail(
+                    email_subject_admin,
+                    email_body_admin,
+                    settings.DEFAULT_FROM_EMAIL,  # Sender's email address
+                    [settings.ADMIN_EMAILS],           # Recipient's email address (user's email)
+                    fail_silently=False,          # Set to True to suppress exceptions if sending fails
+                    html_message=email_body_admin,      # Set the HTML content here
                 )
                     return Response(order_serializer.data, status=status.HTTP_201_CREATED)
                 else:
@@ -270,27 +283,32 @@ class PaymentProofUploadAPIView(APIView):
         print(order.user.email)
         
         # Render the HTML email template
-        email_subject = "Order Update Confirmation"
-        email_body = render_to_string('order/order_update.html', {'user': order.user, 'order': order})
-        # print(email_body)
-
-        # Send the email
+        # email_subject = "Order Update Notification"
+        # email_body = render_to_string('order/order_update.html', {'user': order.user, 'order': order})
+        # # print(email_body)
+      
         # send_mail(
-        #     email_subject,
-        #     email_body,
-        #     settings.DEFAULT_FROM_EMAIL,  # Sender's email address
-        #     [order.user.email],         # Recipient's email address (user's email)
-        #     fail_silently=False,        # Set to True to suppress exceptions if sending fails
-        # )
-        send_mail(
-                    email_subject,
-                    email_body,
-                    settings.DEFAULT_FROM_EMAIL,  # Sender's email address
-                    [order.user.email],           # Recipient's email address (user's email)
-                    fail_silently=False,          # Set to True to suppress exceptions if sending fails
-                    html_message=email_body,      # Set the HTML content here
-                )
+        #             email_subject,
+        #             email_body,
+        #             settings.DEFAULT_FROM_EMAIL,  # Sender's email address
+        #             [order.user.email],           # Recipient's email address (user's email)
+        #             fail_silently=False,          # Set to True to suppress exceptions if sending fails
+        #             html_message=email_body,      # Set the HTML content here
+        #         )
 
+        # Render the HTML email template
+        email_subject_admin = "@admin: Order update Notification"
+        email_body_admin = render_to_string('order/order_update.html', {'user': order.user, 'order': order})
+                            
+        send_mail(
+        email_subject_admin,
+        email_body_admin,
+        settings.DEFAULT_FROM_EMAIL,  # Sender's email address
+        [settings.ADMIN_EMAILS],           # Recipient's email address (user's email)
+        fail_silently=False,          # Set to True to suppress exceptions if sending fails
+        html_message=email_body_admin,      # Set the HTML content here
+        )   
+        
         return Response(serializer.data, status=status.HTTP_200_OK)
 
        

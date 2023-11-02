@@ -6,6 +6,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers_admin import AccountTypeSerializer, TransactionSerializer, OrderSerializer, OrderUpdateSerializer
 from django.http import Http404
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.conf import settings 
 
 
 class AccountTypeViewSet(viewsets.ModelViewSet):
@@ -103,6 +106,35 @@ class OrderDetailView(APIView):
         
         if serializer.is_valid():
             serializer.save()
+             # Render the HTML email template
+            # email_subject = "@admin: Order Update Notification"
+            # email_body = render_to_string('order/order_update.html', {'user': order.user, 'order': order})
+            # # print(email_body)
+            # print("order admin update")
+        
+            # send_mail(
+            #         email_subject,
+            #         email_body,
+            #         settings.DEFAULT_FROM_EMAIL,  # Sender's email address
+            #         [settings.ADMIN_EMAILS],           # Recipient's email address (user's email)
+            #         fail_silently=False,          # Set to True to suppress exceptions if sending fails
+            #         html_message=email_body,      # Set the HTML content here
+            #     )
+            
+            # Render the HTML email template
+            email_subject_user = "Order Update Notification"
+            email_body_user = render_to_string('order/order_update.html', {'user': order.user, 'order': order})            
+        
+            send_mail(
+                    email_subject_user,
+                    email_body_user,
+                    settings.DEFAULT_FROM_EMAIL,  # Sender's email address
+                    [order.user.email],           # Recipient's email address (user's email)
+                    fail_silently=False,          # Set to True to suppress exceptions if sending fails
+                    html_message=email_body_user,      # Set the HTML content here
+                )
+            
+            
             return Response(serializer.data)
         else:
             print(serializer.errors)

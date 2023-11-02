@@ -214,7 +214,7 @@ DEFAULT_FROM_EMAIL = 'admin@webcloner.net'
 # Configure the email templates
 # email_confirmation_message
 ACCOUNT_EMAIL_CONFIRMATION_SUBJECT = 'account/email/email_confirmation_subject.txt'
-ACCOUNT_EMAIL_CONFIRMATION_COOLDOWN = 1800
+ACCOUNT_EMAIL_CONFIRMATION_COOLDOWN = 2
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 7
 ACCOUNT_EMAIL_CONFIRMATION_MESSAGE = 'account/email/email_confirmation_message.html'
 
@@ -224,15 +224,15 @@ ACCOUNT_EMAIL_CONFIRMATION_MESSAGE = 'account/email/email_confirmation_message.h
 ACCOUNT_ADAPTER = 'users.adapter.DefaultAccountAdapterCustom'
 
 # live
-# LOGIN_URL_FRONT = 'https://lasfunding.com/#/#signin/'
-# RESET_PASSWORD_URL_FRONT = 'https://lasfunding.com/confirm-forgot-password.php'
-# BACKEND_URL = 'https://lasfunding.com:8080/'
+LOGIN_URL_FRONT = 'https://lasfunding.com/#/#signin/'
+RESET_PASSWORD_URL_FRONT = 'https://lasfunding.com/confirm-forgot-password.php'
+BACKEND_URL = 'https://lasfunding.com:8080/'
 
 
 # local
-LOGIN_URL_FRONT = 'http://localhost/lasfunding_front/#/#signin/'
-RESET_PASSWORD_URL_FRONT = 'http://localhost/lasfunding_front/confirm-forgot-password.php'
-BACKEND_URL = 'http://localhostm:8080/'
+# LOGIN_URL_FRONT = 'http://localhost/lasfunding_front/#/#signin/'
+# RESET_PASSWORD_URL_FRONT = 'http://localhost/lasfunding_front/confirm-forgot-password.php'
+# BACKEND_URL = 'http://localhost:8000/'
 
 
 from datetime import timedelta
@@ -270,6 +270,7 @@ SIMPLE_JWT = {
 
 
 # Define the MEDIA_ROOT and MEDIA_URL
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = '/media/'
-OLD_PASSWORD_FIELD_ENABLED = True
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media');
+MEDIA_URL = '/media/';
+OLD_PASSWORD_FIELD_ENABLED = True;
+ADMIN_EMAILS = "a.matthew2013@gmail.com";

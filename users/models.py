@@ -45,7 +45,7 @@ class KYC(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f'KYC for {self.user.username} - {self.status()}'
+        return f'KYC for {self.user.username} - {self.status}'
     
     
 class WithdrawalMethod(models.Model):

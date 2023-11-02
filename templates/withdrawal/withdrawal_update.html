@@ -1,0 +1,41 @@
+
+<body style="margin: 5px; padding: 5px; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border-collapse: collapse; margin: 30px auto; background-color: #ffffff; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
+        <!-- Header Section -->
+        <tr>
+            <td align="center" bgcolor="white" style="padding: 10px 0;">
+                <h1 style="color: #e04800;">LASFUNDING</h1>
+            </td>
+        </tr>
+        <!-- Content Section -->
+        <tr>
+            <td style="padding: 10px;">
+                <h1 style="font-size: 24px;text-align:center; color: #333; margin-bottom: 20px;">Dear {{ user }},</h1>
+                <p style="font-size: 16px; color: #666;">Withdrawal was processed. Here are the details. </p>         
+                                
+                <div>
+                    <span>Id: <b> {{withdrawal.id}}</b></span>                    
+                 </div>
+                 <div>
+                     <span>Amount: <b>{{withdrawal.amount}}</b></span>                    
+                 </div>
+                 <div>
+                     <span>Status: <b>{{withdrawal.status}}</b></span>
+                 </div>                           
+                 <div>
+                     <span>Created_at: <b>{{withdrawal.created_at}}</b></span>                    
+                 </div>
+                 <div>
+                     <span>Updated_at: <b>{{withdrawal.updated_at}}</b></span>                    
+                 </div>                     
+            </td>
+        </tr>
+        <!-- Footer Section -->
+        <tr>
+            <td align="center" bgcolor="#e04800" style="padding: 10px 0; color: #fff; font-size: 14px;">
+                2023 &copy; Lasfunding. All rights reserved.
+            </td>
+        </tr>
+    </table>
+</body>
+

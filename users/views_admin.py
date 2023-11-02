@@ -7,7 +7,9 @@ from .serializers_admin import CustomUserSerializer, WithdrawalSerializer, KYCSe
 from .models import CustomUser, Withdrawal, KYC
 from django.http import Http404
 from store.models import Order
-
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.conf import settings 
 
 
 class CustomLoginView(LoginView):
@@ -79,6 +81,20 @@ class UserDetailView(APIView):
         serializer = UpdateUserSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
+            
+            # Render the HTML email template
+            email_subject_user = "User Update Notification"
+            email_body_user = render_to_string('user/user_update.html', {'user': user})            
+        
+            send_mail(
+                    email_subject_user,
+                    email_body_user,
+                    settings.DEFAULT_FROM_EMAIL,  # Sender's email address
+                    [user.email],           # Recipient's email address (user's email)
+                    fail_silently=False,          # Set to True to suppress exceptions if sending fails
+                    html_message=email_body_user,      # Set the HTML content here
+                )
+            
             return Response(serializer.data)
         else:
             print(serializer.errors)  
@@ -119,6 +135,20 @@ class WithdrawalDetailView(APIView):
         serializer = WithdrawalSerializer(withdrawal, data=request.data)
         if serializer.is_valid():
             serializer.save()
+            
+            # Render the HTML email template
+            email_subject_user = "Withdrawal requst Update Notification"
+            email_body_user = render_to_string('withdrawal/withdrawal_update.html', {'user': withdrawal.user, 'withdrawal': withdrawal})            
+        
+            send_mail(
+                    email_subject_user,
+                    email_body_user,
+                    settings.DEFAULT_FROM_EMAIL,  # Sender's email address
+                    [withdrawal.user.email],           # Recipient's email address (user's email)
+                    fail_silently=False,          # Set to True to suppress exceptions if sending fails
+                    html_message=email_body_user,      # Set the HTML content here
+                )
+            
             return Response(serializer.data)
         else:
             print(serializer.errors)  
@@ -160,6 +190,21 @@ class KYCDetailView(APIView):
         serializer = KYCUpdateSerializer(kyc, data=request.data)
         if serializer.is_valid():
             serializer.save()
+            
+            
+            # Render the HTML email template
+            email_subject_user = "KYC Update Notification"
+            email_body_user = render_to_string('kyc/kyc_update.html', {'user': kyc.user, 'kyc': kyc})            
+        
+            send_mail(
+                    email_subject_user,
+                    email_body_user,
+                    settings.DEFAULT_FROM_EMAIL,  # Sender's email address
+                    [kyc.user.email],           # Recipient's email address (user's email)
+                    fail_silently=False,          # Set to True to suppress exceptions if sending fails
+                    html_message=email_body_user,      # Set the HTML content here
+                )
+            
             return Response(serializer.data)
         else:
             print(serializer.errors)  
