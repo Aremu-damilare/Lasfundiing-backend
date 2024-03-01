@@ -224,15 +224,15 @@ ACCOUNT_EMAIL_CONFIRMATION_MESSAGE = 'account/email/email_confirmation_message.h
 ACCOUNT_ADAPTER = 'users.adapter.DefaultAccountAdapterCustom'
 
 # live
-LOGIN_URL_FRONT = 'https://lasfunding.com/#/#signin/'
-RESET_PASSWORD_URL_FRONT = 'https://lasfunding.com/confirm-forgot-password.php'
-BACKEND_URL = 'https://lasfunding.com:8080/'
+# LOGIN_URL_FRONT = 'https://lasfunding.com/#/#signin/'
+# RESET_PASSWORD_URL_FRONT = 'https://lasfunding.com/confirm-forgot-password.php'
+# BACKEND_URL = 'https://lasfunding.com:8080/'
 
 
 # local
-# LOGIN_URL_FRONT = 'http://localhost/lasfunding_front/#/#signin/'
-# RESET_PASSWORD_URL_FRONT = 'http://localhost/lasfunding_front/confirm-forgot-password.php'
-# BACKEND_URL = 'http://localhost:8000/'
+LOGIN_URL_FRONT = 'http://localhost/lasfunding_front/#/#signin/'
+RESET_PASSWORD_URL_FRONT = 'http://localhost/lasfunding_front/confirm-forgot-password.php'
+BACKEND_URL = 'http://localhost:8000/'
 
 
 from datetime import timedelta
@@ -274,3 +274,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media');
 MEDIA_URL = '/media/';
 OLD_PASSWORD_FIELD_ENABLED = True;
 ADMIN_EMAILS = "a.matthew2013@gmail.com";
+
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'UPDATE'
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]

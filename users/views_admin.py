@@ -3,7 +3,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
-from .serializers_admin import CustomUserSerializer, WithdrawalSerializer, KYCSerializer, UpdateUserSerializer, KYCUpdateSerializer
+from .serializers_admin import CustomUserSerializer, WithdrawalSerializer, KYCSerializer, UpdateUserSerializer, KYCUpdateSerializer, \
+    WithdrawalUserSerializer
+    
 from .models import CustomUser, Withdrawal, KYC
 from django.http import Http404
 from store.models import Order
@@ -108,12 +110,13 @@ class WithdrawalListCreateView(APIView):
     permission_classes = [IsAdminUser]
 
     def get_queryset(self):        
-        users = Withdrawal.objects.all()
-        return users
+        withdrawals = Withdrawal.objects.all()
+        return withdrawals
 
     def get(self, request):
-        serializer = WithdrawalSerializer(self.get_queryset(), many=True)
+        serializer = WithdrawalUserSerializer(self.get_queryset(), many=True)
         return Response(serializer.data)
+
 
 
 class WithdrawalDetailView(APIView):

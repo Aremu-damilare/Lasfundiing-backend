@@ -14,6 +14,13 @@ class WithdrawalSerializer(serializers.ModelSerializer):
         model = Withdrawal
         fields ='__all__'
         
+        
+class WithdrawalUserSerializer(serializers.ModelSerializer):  
+    user = CustomUserSerializer()
+    class Meta:
+        model = Withdrawal
+        fields ='__all__'
+        
 
 class KYCSerializer(serializers.ModelSerializer):  
     class Meta:

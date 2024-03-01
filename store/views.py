@@ -208,7 +208,7 @@ class CreateOrder(generics.CreateAPIView):
                 )
                     
                     # Render the HTML email template
-                    email_subject_admin = "@admin: New Order Notification"
+                    email_subject_admin = "@admin - New Order Notification"
                     email_body_admin = render_to_string('order/order_confirm.html', context)
                                         
                     send_mail(
@@ -297,7 +297,7 @@ class PaymentProofUploadAPIView(APIView):
         #         )
 
         # Render the HTML email template
-        email_subject_admin = "@admin: Order update Notification"
+        email_subject_admin = "@admin - Order update Notification"
         email_body_admin = render_to_string('order/order_update.html', {'user': order.user, 'order': order})
                             
         send_mail(
@@ -358,4 +358,3 @@ def ValidateCoupon(request):
         # except:
         #     print("Error adding coupon to order")
         return JsonResponse({'discounted_price': discounted_amount})
-    

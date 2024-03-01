@@ -34,7 +34,11 @@ class TicketListCreateView(APIView):
             ticket = serializer.save()            
             print("Ticket created!!")
             print(ticket)
-            # ticket = Ticket.objects.get(id=ticket.data.)
+            
+            comment_content = self.request.data.get('content', None)
+            if comment_content:            
+                TicketComment.objects.create(ticket=ticket, content=comment_content, user=request.user)
+            
             # Render the HTML email template
             email_subject = "New Ticket Notification"
             email_body = render_to_string('ticket/ticket_new.html', {'ticket': ticket, 'user': request.user.email})
@@ -50,7 +54,7 @@ class TicketListCreateView(APIView):
                     )
 
             # Render the HTML email template
-            email_subject_admin = "@admin: Ticket New Notification"
+            email_subject_admin = "@admin - Ticket New Notification"
             email_body_admin = render_to_string('ticket/ticket_new.html', {'ticket': ticket, 'user': request.user.email})
                                 
             send_mail(
@@ -111,7 +115,7 @@ class TicketCommentListCreateView(APIView):
             print(request.data)
                        
             # Render the HTML email template
-            email_subject_admin = "@admin: Comment Notification"
+            email_subject_admin = "@admin - Comment Notification"
             email_body_admin = render_to_string('ticket/ticket_update.html', {'ticket': ticket, 'comment': request.data.get('content'), 'user': authenticated_user.email})
                                 
             send_mail(

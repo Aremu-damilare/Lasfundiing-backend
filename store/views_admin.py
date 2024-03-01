@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers_admin import AccountTypeSerializer, TransactionSerializer, OrderSerializer, OrderUpdateSerializer
+from .serializers_admin import AccountTypeSerializer, TransactionSerializer, OrderSerializer, OrderUpdateSerializer, AccountTypeUpdateSerializer
 from django.http import Http404
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -41,6 +41,33 @@ class AccountTypeViewSet(viewsets.ModelViewSet):
             return []
         return super().get_permissions()
 
+    def retrieve(self, request, pk=None):
+        """
+        Retrieve details of an account type by ID.
+
+        This endpoint is accessible only to authenticated admin users.
+        """
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except AccountType.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    
+    def update(self, request, pk=None):
+        """
+        Update details of an account type by ID.
+
+        This endpoint is accessible only to authenticated admin users.
+        """
+        try:
+            instance = self.get_object()
+            serializer = AccountTypeUpdateSerializer(instance, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except AccountType.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class TransactionList(APIView):
